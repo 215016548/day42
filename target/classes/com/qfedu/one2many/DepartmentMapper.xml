@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qfedu.one2many.DepartmentDao">
+
+    <!--嵌套结果的第一种写法(多对一的关系)-->
+    <resultMap id="deptMap1" type="com.qfedu.one2many.Department">
+        <id column="did" property="did"></id>
+        <result column="dname" property="dname"></result>
+        <!--
+            property    对象的属性
+            javaType    对象属性的类型
+            ofType      表示列表中元素的类型
+        -->
+        <collection property="empList" javaType="list" ofType="com.qfedu.one2many.Employee">
+            <id column="eid" property="eid"></id>
+            <result column="ename" property="ename"></result>
+        </collection>
+    </resultMap>
+    <!--通过部门查员工     多对一的关系-->
+    <select id="findByDid1" parameterType="int" resultMap="deptMap1">
+        select * from t_dept d inner join t_emp e on d.did = e.deptId where d.did = #{did}
+    </select>
+
+
+    <!--嵌套结果的第二种写法(多对一的关系)-->
+    <resultMap id="deptMap2" type="com.qfedu.one2many.Department">
+        <id column="did" property="did"></id>
+        <result column="dname" property="dname"></result>
+        <collection property="empList" javaType="list" ofType="com.qfedu.one2many.Employee"
+                    resultMap="com.qfedu.one2many.EmployeeDao.employeeMap">
+
+        </collection>
+    </resultMap>
+    <!--根据部门did查询员工-->
+    <select id="findByDid2" parameterType="int" resultMap="deptMap2">
+        select * from t_dept d inner join t_emp e on d.did = e.deptId where d.did = #{did}
+    </select>
+
+
+    <!--
+        嵌套查询的写法  多对一关系
+        执行n + 1 sql
+        column  另外执行sql语句需要的条件
+        select  另外一个sql语句
+    -->
+    <resultMap id="deptMap3" type="com.qfedu.one2many.Department">
+        <id column="did" property="did"></id>
+        <result column="dname" property="dname"></result>
+        <collection property="empList" javaType="list" ofType="com.qfedu.one2many.Employee"
+                    column="did"
+                    select="com.qfedu.one2many.EmployeeDao.findByDeptId"><!--嵌套查询的写法: 注意在这种写法的时候可以不在com.qfedu.one2many.EmployeeDao接口中写findByDeptId方法-->
+
+        </collection>
+    </resultMap>
+    <!--根据部门did查询员工-->
+    <select id="findByDid3" parameterType="int" resultMap="deptMap3">
+        select * from t_dept where did = #{did}
+    </select>
+
+    <!--查询所有部门下的所有员工(使用嵌套查询的方法)-->
+    <select id="findAll" resultMap="deptMap3">
+        select * from t_dept
+    </select>
+
+
+    <!--==============================================================================================-->
+    <!--EmployeeMapper.xml中嵌套结果的写法-->
+    <resultMap id="deptMap" type="com.qfedu.one2many.Department">
+        <id column="did" property="did"></id>
+        <result column="dname" property="dname"></result>
+    </resultMap>
+
+
+    <!--
+        EmployeeMapper.xml中嵌套查询的写法,
+        要写两个sql语句,先执行DepartmentMapper.xml中的sql语句,
+        然后把查询出来的deptId当做第二条sql语句查询的条件.
+        注意在这种写法的时候可以不在com.qfedu.one2many.EmployeeDao接口中写findByDeptId方法
+    -->
+    <select id="findByDeptId" parameterType="int" resultType="com.qfedu.one2many.Department">
+        select * from t_dept where did = #{deptId}
+    </select>
+</mapper>

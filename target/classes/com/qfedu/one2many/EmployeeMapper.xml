@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.qfedu.one2many.EmployeeDao">
+    <resultMap id="employeeMap" type="com.qfedu.one2many.Employee">
+        <id column="eid" property="eid"></id>
+        <result column="ename" property="ename"></result>
+    </resultMap>
+    <select id="findByDeptId" parameterType="int" resultType="com.qfedu.one2many.Employee">
+        select * from t_emp where deptId = #{did}
+    </select>
+
+    <!--=======================================================================================================-->
+    <!--嵌套结果的写法    一对一的关系-->
+    <resultMap id="empMap" type="com.qfedu.one2many.Employee">
+        <id column="eid" property="eid"></id>
+        <result column="ename" property="ename"></result>
+        <!--在一对一关系中要用association标签, 在多对多的关系中要使用collection标签-->
+        <association property="department" resultMap="com.qfedu.one2many.DepartmentDao.deptMap"></association>
+    </resultMap>
+    <!--根据员工id查询部门(嵌套结果的写法)-->
+    <select id="findByEid" parameterType="int" resultMap="empMap">
+        select * from t_emp e inner join t_dept d on e.eid = d.did where eid = #{eid}
+    </select>
+
+
+    <!--嵌套查询的写法    一对一的关系-->
+    <resultMap id="empMap1" type="com.qfedu.one2many.Employee">
+        <id column="eid" property="eid"></id>
+        <result column="ename" property="ename"></result>
+        <!--
+            在一对一的关系中要使用association标签,在一对多的关系中要使用collection标签
+            property    实体类对应的属性
+            column      执行另外一条sql语句传入的参数
+            select      执行的另一天sql语句
+        -->
+        <association property="department" column="deptId" select="com.qfedu.one2many.DepartmentDao.findByDeptId">
+
+        </association>
+    </resultMap>
+    <!--根据员工id查询部门(嵌套查询的写法)-->
+    <select id="findByEid1" parameterType="int" resultMap="empMap1">
+        select * from t_emp where eid = #{eid}
+    </select>
+</mapper>
